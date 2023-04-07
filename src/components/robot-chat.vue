@@ -31,7 +31,6 @@ let it = setInterval(() => {
     }
     if (props.complete.value && count === 0) {
         marked(data.value, (err, out) => {
-            console.log(out)
             data.value = out.replace(/<pre>/g, "<pre class='hljs'>")
         })
         clearInterval(it)

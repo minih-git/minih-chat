@@ -1,19 +1,19 @@
 <template>
-    <div id="app">
+    <div id="app" >
         <div id="chat">
             <component v-for="item in chatList" :is="item.type" :content="item.content"
                        :complete="item.complete"></component>
         </div>
-        <div id="content">
-            <textarea id="content-input" v-model="myReason" @keydown.enter="submit"></textarea>
-            <div id="submit" @click="submit">
+        <form id="content" @submit="submit" >
+            <input id="content-input" v-model="myReason" :disabled="!complete[reasonId].value "/>
+            <button id="submit" type="submit"  >
                 <svg t="1680773974991" class="icon" viewBox="0 0 1024 1024" version="1.1"
                      xmlns="http://www.w3.org/2000/svg" p-id="2628" width="200" height="200">
                     <path d="M233.984 489.472l131.072 92.672c13.824 9.728 32.768 8.192 44.544-3.584l188.416-188.416c9.728-9.728 26.112-9.728 35.84 0 9.728 9.728 9.728 26.112 0 35.84L445.44 614.4c-11.776 11.776-13.824 30.72-3.584 44.544l92.672 131.072c32.768 46.592 104.448 35.84 122.368-18.432l158.208-475.136c17.92-54.272-33.792-105.984-88.064-88.064l-474.624 158.72c-54.272 17.92-64.512 89.6-18.432 122.368z"
                           fill="#CCDAFF" p-id="2629"></path>
                 </svg>
-            </div>
-        </div>
+            </button>
+        </form>
     </div>
 
 </template>
@@ -28,12 +28,10 @@ let myReason = ref('')
 
 const chatId = new Date().getTime() + ''
 const sse = new EventSource("/api/sse/connect?uuid=" + chatId);
-
 let content = {}
-let complete = {}
+let complete = {0: ref(true)}
 let reasonId = 0;
 sse.onmessage = event => {
-    console.log("event.data", event.data)
     if (event.data !== '<连接成功>' && event.data !== '<complete>') {
         content[reasonId].value = event.data.replace(/<&br>/g, "\n")
     }
@@ -42,7 +40,11 @@ sse.onmessage = event => {
     }
 }
 
-function submit() {
+function submit(e) {
+    e.preventDefault()
+    if (myReason === '' || myReason.value === '') {
+        return
+    }
     reasonId++;
     let message = typeof myReason === 'object' ? myReason.value : myReason
     myReason = ''
@@ -71,6 +73,8 @@ function submit() {
 #app {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
     background-image: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)
 }
 
@@ -90,7 +94,7 @@ function submit() {
 
 #content-input {
     width: 100%;
-    height: 95px;
+    height: 55px;
     border: none;
     outline: none;
     padding: 12px;
@@ -104,6 +108,11 @@ function submit() {
 #submit {
     cursor: pointer;
     position: relative;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-tap-highlight-color: transparent;
 }
 
 #submit svg {
